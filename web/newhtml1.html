@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Jstree Example</title>
+
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+        <link rel="stylesheet" href="./dist/themes/default/style.min.css" />
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="./dist/jstree.min.js"></script>  
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+         <style>
+            ul li p {
+                background: #d3dce3;
+                padding: .2em;
+                margin: .4em;
+                border-radius: 2px;
+            }
+            .move 
+            {
+                cursor: move;
+            }
+        </style>
+
+        <script type="text/javascript">
+
+            var jsonTreeData = {'id': "1", "name": "Electronics", "text": "Electronics", "parent_id": "0", "children": [
+                    {"id": "2", "name": "Mobile", "text": "Mobile", "parent_id": "1", "children": [
+                            {"id": "7", "name": "Samsung", "text": "Samsung", "parent_id": "2", "children": [{"id": "12", "name": "Samsung Duos", "text": "Samsung Duos", "parent_id": "5", "children": [], "data": {}, "a_attr": {"href": "google.com"}},
+                                    {"id": "13", "name": "Samsung S7", "text": "Samsung S7", "parent_id": "5", "children": [], "data": {}, "a_attr": {"href": "google.com"}}], "data": {}, "a_attr": {"href": "google.com"}},
+                            {"id": "8", "name": "Apple", "text": "Apple", "parent_id": "2", "children": [], "data": {}, "a_attr": {"href": "google.com"}}], "data": {}, "a_attr": {"href": "google.com"}},
+                    {"id": "3", "name": "Laptop", "text": "Laptop", "parent_id": "1", "children": [
+                            {"id": "4", "name": "Keyboard", "text": "Keyboard", "parent_id": "3", "children": [], "data": {}, "a_attr": {"href": "google.com"}},
+                            {"id": "5", "name": "Computer Peripherals", "text": "Computer Peripherals", "parent_id": "3", "children": [
+                                    {"id": "6", "name": "Printers", "text": "Printers", "parent_id": "5", "children": [], "data": {}, "a_attr": {"href": "google.com"}},
+                                    {"id": "10", "name": "Monitors", "text": "Monitors", "parent_id": "5", "children": [], "data": {}, "a_attr": {"href": "google.com"}}], "data": {}, "a_attr": {"href": "google.com"}},
+                            {"id": "11", "name": "Dell", "text": "Dell", "parent_id": "3", "children": [], "data": {}, "a_attr": {"href": "google.com"}}], "data": {}, "a_attr": {"href": "google.com"}}]
+            };
+
+
+            var selectedParentID;                        
+            var shuffledList = []; 
+            var newList = []; 
+            
+            
+            $(document).ready(function ()
+            {               
+                var $treeview = $("#evts");
+                $('#evts').jstree({
+                    'core': {
+                        'data': jsonTreeData
+                    }
+                });
+
+                $('#evts_button').on("click", function () {
+                    $(logger).html("");
+                    var instance = $('#evts').jstree(true);
+                    var a = $("#evts").jstree().get_selected();
+                    selectedParentID = a[0];
+                    instance.select_node('a');
+
+                    console.log(selectedParentID[0]);
+                    var childrens = $("#evts").jstree("get_children_dom", a);
+                    for (var i = 0; i < childrens.length; i++)
+                    {
+                        var a = childrens[i].innerText;
+                        var b = childrens[i].id;
+                        // children_SelectedParent[i] = b;
+                        logger = document.getElementById("logger");
+                        let element = document.createElement("div");
+                        element.setAttribute("id", b);
+                        let txt = document.createTextNode(a);
+
+                        element.appendChild(txt);
+                        logger.appendChild(element);
+                    }
+                });
+
+                $(".dialog").dialog({autoOpen: false});
+                $(".opener").click(function () {
+                    $(".dialog").dialog({
+                        buttons: {
+                            Save: function () {
+                                getshuffledChildren();
+
+                                eachRecursive(jsonTreeData);
+                                $('#evts').jstree(true).settings.core.data = jsonTreeData;
+                                $('#evts').jstree(true).refresh();
+                                $(this).dialog("close");
+                            },
+                            Cancel: function () {
+                                $(this).dialog("close");
+                            }
+                        }
+                    });
+                    $(".dialog").dialog("open");
+                });
+                $(".sortable").sortable();
+                $(".sortable").disableSelection();
+            });
+
+            function eachRecursive(obj)
+            {
+                for (var k in obj)
+                {
+                    if (typeof obj[k] === "object" && obj[k] !== null) {
+                        //console.log(obj[k]);
+                        eachRecursive(obj[k]);
+                    } else {
+                        if (obj.id !== undefined && obj.id === selectedParentID) 
+                        {                            
+                                //newJson.push(obj.children);                                
+                                findchildren(obj.children);
+                                //delete obj.children;
+                                obj.children = newList;                                
+                                break;                            
+                        }
+                    }
+                }
+            }
+
+
+            function getshuffledChildren() {
+                shuffledList = [];
+                var logger = document.getElementById("logger");                
+                for (var i = 0; i < logger.childNodes.length; i++) {
+                    shuffledList[i] = logger.childNodes[i].id;
+                }
+            }
+            
+            function findchildren(childObjects){
+                newList = [];
+                for (var j in shuffledList)
+                {                    
+                    for (var k in childObjects)
+                    {                                           
+                        if(shuffledList[j] === childObjects[k].id)
+                        {
+                            newList.push(childObjects[k]);                            
+                            break;
+                        }
+                    }
+                }                  
+            }  
+
+
+
+
+        </script>
+    </head>
+
+    <body>
+
+
+
+        <div class="container" style="padding:10px 10px;">
+
+
+            <button  id="evts_button" class="opener btn btn-default">Move Columns</button> 
+            <div id="evts"></div>
+            <div  class="dialog" title="Move Nodes">
+                <p>Move the courses by dragging them up and down.</p>
+                <ul style="list-style-type: none;  margin-left: -40px;font-weight: bold;" class="sortable move " id="logger">
+                </ul>
+            </div>    
+
+        </div>
+
+    </body>
+</html>
